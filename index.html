@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title> Карамель: мастер сахара</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #2c1810 0%, #5a2e1a 50%, #8b4513 100%);
+    min-height: 100vh;
+    color: #fff5e6;
+    padding: 20px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  h1 {
+    text-align: center;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+  }
+  .subtitle { text-align: center; opacity: 0.85; margin-bottom: 30px; font-style: italic; }
+  .screen { display: none; animation: fadeIn 0.5s; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+
+  .menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 30px; }
+  .btn {
+    background: linear-gradient(145deg, #d4a056, #a0692d);
+    color: #fff;
+    border: none;
+    padding: 18px 25px;
+    font-size: 1.1em;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    font-weight: 600;
+  }
+  .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(212,160,86,0.5); }
+  .btn:active { transform: translateY(0); }
+  .btn-secondary { background: linear-gradient(145deg, #6b4423, #3d2817); }
+  .btn-small { padding: 10px 18px; font-size: 0.95em; }
+  .btn-stop {
+    background: linear-gradient(145deg, #f44336, #c62828);
+    font-size: 1.3em;
+    padding: 20px 40px;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 4px 15px rgba(244,67,54,0.4); }
+    50% { box-shadow: 0 4px 25px rgba(244,67,54,0.8); }
+  }
+
+  .card {
+    background: rgba(255, 245, 230, 0.08);
+    border: 1px solid rgba(212,160,86,0.3);
+    border-radius: 15px;
+    padding: 25px;
+    backdrop-filter: blur(10px);
+    margin-bottom: 20px;
+  }
+
+  /* МИНИ-ИГРА "ПОЙМАЙ МОМЕНТ" */
+  .dish-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+  }
+  @media (max-width: 768px) { .dish-cards { grid-template-columns: 1fr; } }
+  
+  .dish-card {
+    background: rgba(255,245,230,0.1);
+    border: 2px solid rgba(212,160,86,0.3);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .dish-card.active {
+    border-color: #ffd700;
+    background: rgba(255,215,0,0.15);
+    box-shadow: 0 0 20px rgba(255,215,0,0.3);
+  }
+  .dish-card img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+  .dish-card h4 { color: #ffd700; margin-bottom: 5px; }
+  .dish-card p { font-size: 0.9em; opacity: 0.85; }
+
+  .game-center {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    align-items: center;
+    margin: 30px 0;
+  }
+  @media (max-width: 768px) { .game-center { grid-template-columns: 1fr; } }
+
+  .glass-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .glass {
+    width: 250px;
+    height: 300px;
+    background: rgba(255,255,255,0.1);
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 10px 10px 50px 50px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.3), 0 10px 30px rgba(0,0,0,0.5);
+  }
+  .glass::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 20%;
+    height: 60%;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    filter: blur(5px);
+  }
+  .caramel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60%;
+    background: #fef9e7;
+    transition: background 0.3s;
+    border-radius: 0 0 47px 47px;
+  }
+  .caramel.bubbling::after {
+    content: '◯  ◯';
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.5em;
+    opacity: 0.5;
+    animation: bubble 1.5s infinite;
+    letter-spacing: 15px;
+  }
+  @keyframes bubble {
+    0%,100% { transform: translate(-50%, 0); opacity: 0.5; }
+    50% { transform: translate(-50%, -15px); opacity: 0.2; }
+  }
+
+  .temp-display {
+    font-size: 3em;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 0 15px rgba(255,215,0,0.5);
+    margin-top: 20px;
+  }
+
+  .thermometer {
+    width: 60px;
+    height: 300px;
+    background: rgba(255,255,255,0.1);
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 30px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+  }
+  .thermo-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, #f44336, #ff9800, #ffd700);
+    transition: height 0.3s;
+    border-radius: 0 0 27px 27px;
+  }
+  .thermo-markers {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px 5px;
+    font-size: 0.7em;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .info-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 25px 0;
+  }
+  @media (max-width: 768px) { .info-fields { grid-template-columns: 1fr; } }
+  
+  .info-field {
+    background: rgba(255,245,230,0.08);
+    border: 1px solid rgba(212,160,86,0.3);
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 120px;
+  }
+  .info-field label {
+    display: block;
+    color: #ffd700;
+    font-weight: 600;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+  }
+  .info-field div {
+    line-height: 1.6;
+    opacity: 0.9;
+  }
+
+  .game-controls {
+    text-align: center;
+    margin: 25px 0;
+  }
+
+  .result-badge {
+    display: inline-block;
+    padding: 15px 30px;
+    border-radius: 12px;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 15px 0;
+  }
+  .result-badge.perfect {
+    background: rgba(76,175,80,0.3);
+    border: 2px solid #4caf50;
+    color: #4caf50;
+  }
+  .result-badge.good {
+    background: rgba(255,193,7,0.3);
+    border: 2px solid #ffc107;
+    color: #ffc107;
+  }
+  .result-badge.miss {
+    background: rgba(244,67,54,0.3);
+    border: 2px solid #f44336;
+    color: #f44336;
+  }
+
+  /* Остальные стили */
+  .lab-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+  @media (max-width: 768px) { .lab-layout { grid-template-columns: 1fr; } }
+
+  .cauldron {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #fff, transparent 60%), #f5deb3;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.3), 0 10px 30px rgba(0,0,0,0.5);
+    transition: background 0.5s, box-shadow 0.5s;
+    position: relative;
+    overflow: hidden;
+  }
+  .cauldron::after {
+    content: '';
+    position: absolute;
+    top: 15%; left: 15%;
+    width: 30%; height: 20%;
+    background: rgba(255,255,255,0.4);
+    border-radius: 50%;
+    filter: blur(8px);
+  }
+  .cauldron.bubbles::before {
+    content: '◯ ◯ ◯';
+    position: absolute;
+    bottom: 30%; left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.5em;
+    opacity: 0.6;
+    animation: bubble 2s infinite;
+    letter-spacing: 10px;
+  }
+
+  .slider {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(to right, #e0e0e0, #f5deb3, #d4a056, #8b4513, #3d2817);
+    outline: none;
+  }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #ffd700;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255,215,0,0.8);
+  }
+
+  .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.15); }
+  .info-label { opacity: 0.75; }
+  .info-value { font-weight: 600; color: #ffd700; }
+
+  .question-box { font-size: 1.3em; margin: 20px 0; line-height: 1.5; }
+  .options { display: grid; gap: 12px; margin: 20px 0; }
+  .option {
+    background: rgba(255,245,230,0.1);
+    border: 2px solid rgba(212,160,86,0.4);
+    color: #fff5e6;
+    padding: 15px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 1.05em;
+    transition: all 0.2s;
+  }
+  .option:hover { background: rgba(212,160,86,0.25); border-color: #d4a056; }
+  .option.correct { background: rgba(76,175,80,0.4); border-color: #4caf50; }
+  .option.wrong { background: rgba(244,67,54,0.4); border-color: #f44336; }
+  .option:disabled { cursor: default; }
+
+  .feedback {
+    padding: 15px;
+    border-radius: 10px;
+    margin: 15px 0;
+    display: none;
+  }
+  .feedback.show { display: block; animation: fadeIn 0.4s; }
+  .feedback.ok { background: rgba(76,175,80,0.2); border-left: 4px solid #4caf50; }
+  .feedback.bad { background: rgba(244,67,54,0.2); border-left: 4px solid #f44336; }
+
+  .progress {
+    height: 8px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #d4a056, #ffd700);
+    transition: width 0.4s;
+  }
+
+  .color-sample {
+    width: 100%;
+    height: 150px;
+    border-radius: 15px;
+    margin: 15px 0;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.3);
+  }
+
+  .stages-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+  }
+  .stages-table th, .stages-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+  }
+  .stages-table th { color: #ffd700; }
+  .color-dot {
+    display: inline-block;
+    width: 25px; height: 25px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  }
+
+  .score-badge {
+    display: inline-block;
+    background: linear-gradient(145deg, #ffd700, #d4a056);
+    color: #2c1810;
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    margin-left: 10px;
+  }
+
+  .hint-box {
+    background: rgba(255,215,0,0.1);
+    border-left: 4px solid #ffd700;
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+    font-size: 0.95em;
+  }
+
+  .nav-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ГЛАВНОЕ МЕНЮ -->
+<div id="menu" class="screen active">
+  <h1>🍬 Карамель: мастер сахара</h1>
+  <p class="subtitle">Интерактивный тренажёр для студентов поварского и кондитерского дела</p>
+
+  <div class="card">
+    <p style="line-height:1.6;">Добро пожаловать! Здесь вы научитесь определять стадии карамелизации сахара по температуре, цвету, консистенции и применять полученные знания в приготовлении блюд. Выберите режим:</p>
+  </div>
+
+  <div class="menu">
+    <button class="btn" onclick="showScreen('lab')">🌡️ Лаборатория<br><small style="opacity:0.8">Изучи стадии карамели</small></button>
+    <button class="btn" onclick="startCatchGame()"> Поймай момент<br><small style="opacity:0.8">Мини-игра с термометром</small></button>
+    <button class="btn" onclick="startIdentify()">🎨 Определи стадию<br><small style="opacity:0.8">Тренировка глазомера</small></button>
+    <button class="btn" onclick="startQuiz()">📝 Викторина<br><small style="opacity:0.8">15 вопросов с подсказками</small></button>
+    <button class="btn btn-secondary" onclick="showScreen('theory')"> Справочник<br><small style="opacity:0.8">Таблица стадий</small></button>
+  </div>
+
+  <div class="card" style="margin-top:25px;">
+    <strong>🏆 Ваш рекорд в викторине:</strong> <span id="bestScore" class="score-badge">0 / 15</span>
+  </div>
+</div>
+
+<!-- МИНИ-ИГРА "ПОЙМАЙ МОМЕНТ" -->
+<div id="catchGame" class="screen">
+  <div class="nav-top">
+    <button class="btn btn-small btn-secondary" onclick="showScreen('menu')">← Меню</button>
+    <h2>🎯 Поймай момент <span id="catchScore" class="score-badge">0</span></h2>
+    <div>Раунд: <span id="catchRound">1</span> / 6</div>
+  </div>
+
+  <!-- Карточки блюд сверху -->
+  <div class="dish-cards" id="dishCards">
+    <div class="dish-card" id="dish0">
+      <div style="font-size:3em; margin-bottom:10px;">🍮</div>
+      <h4>Крем-брюле</h4>
+      <p>Карамельная корочка</p>
+    </div>
+    <div class="dish-card" id="dish1">
+      <div style="font-size:3em; margin-bottom:10px;">🍎</div>
+      <h4>Карамельные яблоки</h4>
+      <p>Глазурь на палочке</p>
+    </div>
+    <div class="dish-card" id="dish2">
+      <div style="font-size:3em; margin-bottom:10px;"></div>
+      <h4>Пралине</h4>
+      <p>Карамель с орехами</p>
+    </div>
+  </div>
+
+  <!-- Центральная часть: стакан + термометр -->
+  <div class="game-center">
+    <div class="glass-container">
+      <div class="glass">
+        <div class="caramel" id="caramel"></div>
+      </div>
+      <div class="temp-display"><span id="gameTemp">100</span>°C</div>
+    </div>
+
+    <div class="thermometer">
+      <div class="thermo-fill" id="thermoFill" style="height:0%"></div>
+      <div class="thermo-markers">
+        <span>200°</span>
+        <span>175°</span>
+        <span>150°</span>
+        <span>125°</span>
+        <span>100°</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Кнопка СТОП -->
+  <div class="game-controls">
+    <button class="btn btn-stop" id="stopBtn" onclick="stopGame()"> СТОП</button>
+  </div>
+
+  <!-- Поля подсказок и использования -->
+  <div class="info-fields">
+    <div class="info-field">
+      <label>💡 Подсказки:</label>
+      <div id="gameHints">Нажмите СТОП когда достигнете нужной температуры...</div>
+    </div>
+    <div class="info-field">
+      <label>🍽️ Использование:</label>
+      <div id="gameUsage">Здесь появится информация о применении карамели...</div>
+    </div>
+  </div>
+
+  <!-- Результат и кнопка ответа -->
+  <div class="game-controls">
+    <div id="gameResult"></div>
+    <button class="btn" id="answerBtn" onclick="nextRound()" style="display:none;">✓ Следующее блюдо →</button>
+  </div>
+</div>
+
+<!-- ЛАБОРАТОРИЯ -->
+<div id="lab" class="screen">
+  <div class="nav-top">
+    <button class="btn btn-small btn-secondary" onclick="showScreen('menu')">← Меню</button>
+    <h2>🌡️ Лаборатория карамели</h2>
+    <div></div>
+  </div>
+
+  <div class="lab-layout">
+    <div class="card" style="text-align:center;">
+      <div id="cauldron" class="cauldron"></div>
+      <div class="temp-display"><span id="tempValue">100</span> °C</div>
+      <input type="range" id="tempSlider" class="slider" min="90" max="200" value="100">
+      <p style="margin-top:10px; opacity:0.8;">Двигайте ползунок — наблюдайте за изменениями</p>
+    </div>
+
+    <div class="card">
+      <h3 style="color:#ffd700; margin-bottom:15px;">📊 Характеристики</h3>
+      <div class="info-row"><span class="info-label">Стадия:</span><span class="info-value" id="stageName">—</span></div>
+      <div class="info-row"><span class="info-label">Цвет:</span><span class="info-value" id="colorName">—</span></div>
+      <div class="info-row"><span class="info-label">Консистенция:</span><span class="info-value" id="consistency">—</span></div>
+      <div class="info-row"><span class="info-label">Тест в воде:</span><span class="info-value" id="waterTest">—</span></div>
+      <div class="info-row"><span class="info-label">Применение:</span><span class="info-value" id="usage">—</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="color:#ffd700; margin-bottom:10px;">💡 Подсказка</h3>
+    <p id="labHint" style="line-height:1.6;">Начните двигать ползунок, чтобы увидеть, как сахар превращается в карамель.</p>
+  </div>
+</div>
+
+<!-- ОПРЕДЕЛЕНИЕ СТАДИИ -->
+<div id="identify" class="screen">
+  <div class="nav-top">
+    <button class="btn btn-small btn-secondary" onclick="showScreen('menu')">← Меню</button>
+    <h2>🎨 Определи стадию <span id="idScore" class="score-badge">0</span></h2>
+    <div></div>
+  </div>
+
+  <div class="card">
+    <p>Перед вами образец карамели. Определите её температуру и применение:</p>
+    <div id="idColor" class="color-sample"></div>
+    <div class="question-box">Какая температура этого образца?</div>
+    <div id="idTempOptions" class="options"></div>
+    <div class="question-box">Для какого блюда лучше всего подойдёт?</div>
+    <div id="idUseOptions" class="options"></div>
+    <div id="idFeedback" class="feedback"></div>
+    <button class="btn" id="idNext" onclick="nextIdentify()" style="display:none;">Следующий образец →</button>
+  </div>
+</div>
+
+<!-- ВИКТОРИНА -->
+<div id="quiz" class="screen">
+  <div class="nav-top">
+    <button class="btn btn-small btn-secondary" onclick="showScreen('menu')">← Меню</button>
+    <h2>📝 Викторина</h2>
+    <div><span id="qCounter">1 / 15</span> <span id="qScore" class="score-badge">0</span></div>
+  </div>
+
+  <div class="progress"><div id="qProgress" class="progress-bar" style="width:6.6%"></div></div>
+
+  <div class="card">
+    <div class="question-box" id="qText"></div>
+    <div id="qHint" class="hint-box" style="display:none;"></div>
+    <div class="options" id="qOptions"></div>
+    <div id="qFeedback" class="feedback"></div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-small" id="hintBtn" onclick="showHint()">💡 Подсказка</button>
+      <button class="btn btn-small" id="nextBtn" onclick="nextQuestion()" style="display:none;">Далее →</button>
+    </div>
+  </div>
+</div>
+
+<!-- РЕЗУЛЬТАТ -->
+<div id="result" class="screen">
+  <div class="card" style="text-align:center;">
+    <h2 style="color:#ffd700; font-size:2em;">🏆 Результат</h2>
+    <div style="font-size:4em; margin:20px 0;" id="resultEmoji">🎉</div>
+    <p style="font-size:1.5em; margin-bottom:20px;">Ваш счёт: <strong id="finalScore">0</strong> / <span id="finalTotal">15</span></p>
+    <p id="resultComment" style="font-size:1.1em; line-height:1.6; margin-bottom:25px;"></p>
+    <button class="btn" onclick="showScreen('menu')">В главное меню</button>
+  </div>
+</div>
+
+<!-- СПРАВОЧНИК -->
+<div id="theory" class="screen">
+  <div class="nav-top">
+    <button class="btn btn-small btn-secondary" onclick="showScreen('menu')">← Меню</button>
+    <h2>📖 Справочник: стадии карамели</h2>
+    <div></div>
+  </div>
+
+  <div class="card">
+    <p style="line-height:1.6; margin-bottom:15px;">Карамелизация — это процесс окисления сахара при нагреве выше 160°C. До этого идут стадии уваривания сахарного сиропа.</p>
+    <table class="stages-table">
+      <tr><th>Темп.</th><th>Стадия</th><th>Цвет</th><th>Применение</th></tr>
+      <tr><td>100°C</td><td>Тонкая нить</td><td><span class="color-dot" style="background:#fff"></span>Прозрачный</td><td>Сиропы, пропитка бисквитов</td></tr>
+      <tr><td>110°C</td><td>Мягкий шарик</td><td><span class="color-dot" style="background:#fef3c7"></span>Светло-жёлтый</td><td>Помадка, мягкие конфеты</td></tr>
+      <tr><td>120°C</td><td>Средний шарик</td><td><span class="color-dot" style="background:#fde68a"></span>Жёлтый</td><td>Нуга, ириски</td></tr>
+      <tr><td>130°C</td><td>Твёрдый шарик</td><td><span class="color-dot" style="background:#fcd34d"></span>Золотистый</td><td>Карамельные конфеты, тянучки</td></tr>
+      <tr><td>140°C</td><td>Мягкий крек</td><td><span class="color-dot" style="background:#f59e0b"></span>Янтарный светлый</td><td>Мягкая карамель, соус</td></tr>
+      <tr><td>150°C</td><td>Твёрдый крек</td><td><span class="color-dot" style="background:#d97706"></span>Янтарный</td><td>Леденцы, петушок на палочке</td></tr>
+      <tr><td>160°C</td><td>Светлая карамель</td><td><span class="color-dot" style="background:#b45309"></span>Золотисто-коричневый</td><td>Карамельный соус, крем</td></tr>
+      <tr><td>170°C</td><td>Средняя карамель</td><td><span class="color-dot" style="background:#92400e"></span>Коричневый</td><td>Глазурь, пралине, нугатина</td></tr>
+      <tr><td>180°C</td><td>Тёмная карамель</td><td><span class="color-dot" style="background:#6b2e0a"></span>Тёмно-коричневый</td><td>Колер для напитков</td></tr>
+      <tr><td>190°C+</td><td>Жжёный сахар</td><td><span class="color-dot" style="background:#1c0a03"></span>Чёрно-коричневый</td><td>⚠️ В пищу не годится</td></tr>
+    </table>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ===== ДАННЫЕ СТАДИЙ =====
+const stages = [
+  {min:90, max:105, name:"Тонкая нить", color:"Прозрачный сироп", hex:"#fef9e7",
+   consist:"Жидкий сироп", water:"Растворяется в воде",
+   use:"Пропитка бисквитов, простые сиропы",
+   hint:"Вода ещё не полностью выпарилась. Сироп стекает с ложки тонкой нитью."},
+  {min:106, max:112, name:"Мягкий шарик", color:"Светло-жёлтый", hex:"#fef3c7",
+   consist:"Густой сироп", water:"Собирается в мягкий шарик",
+   use:"Помадка, мягкие конфеты, итальянская меренга",
+   hint:"Если капнуть в холодную воду — получится мягкий, пластичный шарик."},
+  {min:113, max:120, name:"Средний шарик", color:"Жёлтый", hex:"#fde68a",
+   consist:"Вязкий", water:"Плотный, но податливый шарик",
+   use:"Нуга, ириски, маршмеллоу",
+   hint:"Шарик в воде уже не сплющивается, но остаётся мягким."},
+  {min:121, max:132, name:"Твёрдый шарик", color:"Золотистый", hex:"#fcd34d",
+   consist:"Очень вязкий, тягучий", water:"Твёрдый шарик, слегка липкий",
+   use:"Тянучки, карамельные конфеты, грильяж",
+   hint:"Шарик в воде твёрдый, но ещё поддаётся зубам."},
+  {min:133, max:145, name:"Мягкий крек", color:"Светло-янтарный", hex:"#f59e0b",
+   consist:"Тягучий, при остывании — пластичный", water:"Трескается при сгибании",
+   use:"Мягкая карамель, карамельный соус, тянучки",
+   hint:"Начинается лёгкий карамельный аромат. Масса ещё пластична."},
+  {min:146, max:154, name:"Твёрдый крек", color:"Янтарный", hex:"#d97706",
+   consist:"При остывании — стекловидный, хрупкий", water:"Трескается с хрустом",
+   use:"Леденцы, петушок на палочке, карамельные украшения",
+   hint:"Капля в воде мгновенно застывает в твёрдое стекловидное состояние."},
+  {min:155, max:165, name:"Светлая карамель", color:"Золотисто-коричневый", hex:"#b45309",
+   consist:"Жидкая, при остывании — твёрдая", water:"Хрупкая, с характерным ароматом",
+   use:"Карамельный соус, крем шу, флан, карамелизация сахара",
+   hint:"Настоящая карамелизация! Появляется характерный ореховый аромат."},
+  {min:166, max:175, name:"Средняя карамель", color:"Коричневый", hex:"#92400e",
+   consist:"Жидкая, ароматная", water:"Хрупкая, горьковатый вкус",
+   use:"Глазурь, пралине, нугатина, карамельный крем",
+   hint:"Аромат становится более насыщенным, с нотками горечи."},
+  {min:176, max:185, name:"Тёмная карамель", color:"Тёмно-коричневый", hex:"#6b2e0a",
+   consist:"Жидкая, резкий аромат", water:"Хрупкая, выраженная горечь",
+   use:"Колер для напитков, горькая карамель",
+   hint:"Горчинка усиливается. Используется для цвета и аромата в малых дозах."},
+  {min:186, max:220, name:"Жжёный сахар", color:"Чёрно-коричневый", hex:"#1c0a03",
+   consist:"Дым, едкий запах", water:"Непригодна",
+   use:"⚠️ В пищу не используется",
+   hint:"Сахар сгорел. Выбросьте массу и вымойте кастрюлю."}
+];
+
+function getStage(temp) {
+  return stages.find(s => temp >= s.min && temp <= s.max) || stages[stages.length-1];
+}
+
+function getColor(temp) {
+  const stops = [
+    {t:90, c:[254,249,231]},
+    {t:110, c:[254,243,199]},
+    {t:125, c:[253,230,138]},
+    {t:140, c:[245,158,11]},
+    {t:155, c:[217,119,6]},
+    {t:170, c:[180,83,9]},
+    {t:185, c:[107,46,10]},
+    {t:200, c:[28,10,3]}
+  ];
+  if (temp <= stops[0].t) return `rgb(${stops[0].c.join(',')})`;
+  if (temp >= stops[stops.length-1].t) return `rgb(${stops[stops.length-1].c.join(',')})`;
+  for (let i=0; i<stops.length-1; i++) {
+    if (temp >= stops[i].t && temp <= stops[i+1].t) {
+      const k = (temp - stops[i].t) / (stops[i+1].t - stops[i].t);
+      const r = Math.round(stops[i].c[0] + (stops[i+1].c[0]-stops[i].c[0])*k);
+      const g = Math.round(stops[i].c[1] + (stops[i+1].c[1]-stops[i].c[1])*k);
+      const b = Math.round(stops[i].c[2] + (stops[i+1].c[2]-stops[i].c[2])*k);
+      return `rgb(${r},${g},${b})`;
+    }
+  }
+}
+
+// ===== НАВИГАЦИЯ =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ===== МИНИ-ИГРА "ПОЙМАЙ МОМЕНТ" =====
+const dishes = [
+  {name:"Крем-брюле", emoji:"🍮", target:160, range:5, stage:"Светлая карамель",
+   hint:"Для крем-брюле нужна светлая карамель с ореховым ароматом, без горечи. Сахар насыпают тонким слоем на крем и карамелизуют горелкой или в духовке.",
+   use:"Создаёт хрустящую карамельную корочку на нежном заварном креме. Температура 155-165°C даёт золотистый цвет и мягкий вкус."},
+  {name:"Карамельные яблоки", emoji:"🍎", target:150, range:5, stage:"Твёрдый крек",
+   hint:"Яблоки покрывают карамелью стадии 'твёрдый крек'. Она застывает в стекловидную оболочку, которая хрустит при укусе, но не липнет к зубам.",
+   use:"Создаёт твёрдую, хрупкую глазурь на фруктах. Карамель не растекается и держит форму. Идеально для яблок, груш, бананов на палочке."},
+  {name:"Пралине", emoji:"🌰", target:170, range:5, stage:"Средняя карамель",
+   hint:"Пралине — это карамелизированные орехи (миндаль, фундук). Нужна средняя карамель 165-175°C с насыщенным ароматом и лёгкой горчинкой.",
+   use:"Орехи покрываются карамелью и застывают в хрупкие пласты. Используется для начинки конфет, украшения тортов, основы пралиновой пасты."}
+];
+
+let catchScore = 0, catchRound = 0, currentDish = null, gameTemp = 100, gameInterval = null, gameStopped = false;
+
+function startCatchGame() {
+  catchScore = 0;
+  catchRound = 0;
+  document.getElementById('catchScore').textContent = 0;
+  nextRound();
+  showScreen('catchGame');
+}
+
+function nextRound() {
+  if (catchRound >= dishes.length) {
+    showCatchResult();
+    return;
+  }
+  
+  currentDish = dishes[catchRound];
+  gameTemp = 100;
+  gameStopped = false;
+  
+  document.getElementById('catchRound').textContent = catchRound + 1;
+  document.getElementById('gameTemp').textContent = gameTemp;
+  document.getElementById('gameResult').innerHTML = '';
+  document.getElementById('answerBtn').style.display = 'none';
+  document.getElementById('stopBtn').style.display = 'inline-block';
+  document.getElementById('gameHints').textContent = 'Нажмите СТОП когда достигнете нужной температуры...';
+  document.getElementById('gameUsage').textContent = 'Здесь появится информация о применении карамели...';
+  
+  // Подсветить активное блюдо
+  document.querySelectorAll('.dish-card').forEach((card, i) => {
+    card.classList.toggle('active', i === catchRound);
+  });
+  
+  updateCaramelVisual();
+  startHeating();
+}
+
+function startHeating() {
+  gameInterval = setInterval(() => {
+    if (gameStopped) return;
+    gameTemp += 0.5;
+    if (gameTemp >= 200) {
+      gameTemp = 200;
+      stopGame();
+    }
+    document.getElementById('gameTemp').textContent = Math.floor(gameTemp);
+    updateCaramelVisual();
+  }, 100);
+}
+
+function updateCaramelVisual() {
+  const color = getColor(gameTemp);
+  const caramel = document.getElementById('caramel');
+  caramel.style.background = color;
+  caramel.classList.toggle('bubbling', gameTemp > 100 && gameTemp < 160);
+  
+  const thermoPercent = ((gameTemp - 100) / 100) * 100;
+  document.getElementById('thermoFill').style.height = thermoPercent + '%';
+}
+
+function stopGame() {
+  if (gameStopped) return;
+  gameStopped = true;
+  clearInterval(gameInterval);
+  
+  document.getElementById('stopBtn').style.display = 'none';
+  
+  const target = currentDish.target;
+  const range = currentDish.range;
+  const diff = Math.abs(gameTemp - target);
+  
+  let resultClass, resultText;
+  if (diff <= range) {
+    resultClass = 'perfect';
+    resultText = `✅ ОТЛИЧНО! Вы попали в диапазон ${target-range}–${target+range}°C`;
+    catchScore++;
+    document.getElementById('catchScore').textContent = catchScore;
+  } else if (diff <= range * 2) {
+    resultClass = 'good';
+    resultText = `⚠️ НЕПЛОХО, но мимо. Нужно ${target}°C, у вас ${Math.floor(gameTemp)}°C`;
+  } else {
+    resultClass = 'miss';
+    resultText = `❌ МИМО! Нужно ${target}°C, у вас ${Math.floor(gameTemp)}°C`;
+  }
+  
+  document.getElementById('gameResult').innerHTML = 
+    `<div class="result-badge ${resultClass}">${resultText}</div>`;
+  
+  document.getElementById('gameHints').innerHTML = `<strong>Стадия:</strong> ${currentDish.stage}<br>${currentDish.hint}`;
+  document.getElementById('gameUsage').textContent = currentDish.use;
+  document.getElementById('answerBtn').style.display = 'inline-block';
+  
+  catchRound++;
+}
+
+function showCatchResult() {
+  const pct = catchScore / dishes.length;
+  let emoji, comment;
+  if (pct === 1) { emoji=''; comment='Идеально! Вы мастер карамели!'; }
+  else if (pct >= 0.66) { emoji='👨‍🍳'; comment='Хороший результат! Продолжайте тренироваться.'; }
+  else { emoji='📚'; comment='Стоит повторить стадии карамели в справочнике.'; }
+  
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('finalScore').textContent = catchScore;
+  document.getElementById('finalTotal').textContent = dishes.length;
+  document.getElementById('resultComment').textContent = comment;
+  showScreen('result');
+}
+
+// ===== ЛАБОРАТОРИЯ =====
+const slider = document.getElementById('tempSlider');
+slider.addEventListener('input', updateLab);
+
+function updateLab() {
+  const t = parseInt(slider.value);
+  const s = getStage(t);
+  document.getElementById('tempValue').textContent = t;
+  const c = getColor(t);
+  const cauldron = document.getElementById('cauldron');
+  cauldron.style.background = `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4), transparent 55%), ${c}`;
+  cauldron.classList.toggle('bubbles', t > 100 && t < 160);
+  document.getElementById('stageName').textContent = s.name;
+  document.getElementById('colorName').textContent = s.color;
+  document.getElementById('consistency').textContent = s.consist;
+  document.getElementById('waterTest').textContent = s.water;
+  document.getElementById('usage').textContent = s.use;
+  document.getElementById('labHint').textContent = s.hint;
+}
+updateLab();
+
+// ===== ОПРЕДЕЛЕНИЕ СТАДИИ =====
+let idScore = 0, idCurrent = null, idTempAnswered = false, idUseAnswered = false;
+
+function startIdentify() {
+  idScore = 0;
+  document.getElementById('idScore').textContent = 0;
+  nextIdentify();
+  showScreen('identify');
+}
+
+function nextIdentify() {
+  idTempAnswered = false;
+  idUseAnswered = false;
+  const idx = Math.floor(Math.random() * (stages.length - 1));
+  idCurrent = stages[idx];
+  document.getElementById('idColor').style.background = `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), transparent 55%), ${idCurrent.hex}`;
+
+  const temps = [idCurrent.min + Math.floor((idCurrent.max-idCurrent.min)/2)];
+  while (temps.length < 4) {
+    const r = stages[Math.floor(Math.random()*stages.length)];
+    const t = r.min + Math.floor((r.max-r.min)/2);
+    if (!temps.includes(t)) temps.push(t);
+  }
+  temps.sort(() => Math.random() - 0.5);
+  const tempDiv = document.getElementById('idTempOptions');
+  tempDiv.innerHTML = '';
+  temps.forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.textContent = t + ' °C';
+    b.onclick = () => checkTempAnswer(b, t);
+    tempDiv.appendChild(b);
+  });
+
+  const uses = [idCurrent.use];
+  while (uses.length < 4) {
+    const r = stages[Math.floor(Math.random()*stages.length)];
+    if (!uses.includes(r.use)) uses.push(r.use);
+  }
+  uses.sort(() => Math.random() - 0.5);
+  const useDiv = document.getElementById('idUseOptions');
+  useDiv.innerHTML = '';
+  uses.forEach(u => {
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.textContent = u;
+    b.onclick = () => checkUseAnswer(b, u);
+    useDiv.appendChild(b);
+  });
+
+  document.getElementById('idFeedback').classList.remove('show');
+  document.getElementById('idNext').style.display = 'none';
+}
+
+function checkTempAnswer(btn, val) {
+  if (idTempAnswered) return;
+  idTempAnswered = true;
+  const correct = val >= idCurrent.min && val <= idCurrent.max;
+  document.querySelectorAll('#idTempOptions .option').forEach(b => {
+    b.disabled = true;
+    const v = parseInt(b.textContent);
+    if (v >= idCurrent.min && v <= idCurrent.max) b.classList.add('correct');
+  });
+  if (!correct) btn.classList.add('wrong');
+  checkIdentifyComplete(correct ? null : false);
+}
+
+function checkUseAnswer(btn, val) {
+  if (idUseAnswered) return;
+  idUseAnswered = true;
+  const correct = val === idCurrent.use;
+  document.querySelectorAll('#idUseOptions .option').forEach(b => {
+    b.disabled = true;
+    if (b.textContent === idCurrent.use) b.classList.add('correct');
+  });
+  if (!correct) btn.classList.add('wrong');
+  checkIdentifyComplete(correct ? null : false);
+}
+
+function checkIdentifyComplete(penalty) {
+  if (idTempAnswered && idUseAnswered) {
+    const fb = document.getElementById('idFeedback');
+    const perfect = penalty === null;
+    if (perfect) {
+      idScore++;
+      fb.className = 'feedback show ok';
+      fb.innerHTML = `✅ <strong>Отлично!</strong> Это стадия «${idCurrent.name}». ${idCurrent.hint}`;
+    } else {
+      fb.className = 'feedback show bad';
+      fb.innerHTML = `❌ <strong>Правильный ответ:</strong> стадия «${idCurrent.name}» (${idCurrent.min}–${idCurrent.max}°C). ${idCurrent.hint}`;
+    }
+    document.getElementById('idScore').textContent = idScore;
+    document.getElementById('idNext').style.display = 'inline-block';
+  }
+}
+
+// ===== ВИКТОРИНА =====
+const questions = [
+  {q:"При какой температуре начинается настоящая карамелизация сахара?",
+   o:["100°C","130°C","160°C","200°C"], a:2,
+   h:"До 160°C идёт уваривание сиропа. Карамелизация — это химическая реакция разложения сахарозы при высокой температуре."},
+  {q:"Какая стадия используется для приготовления итальянской меренги?",
+   o:["Тонкая нить (100°C)","Мягкий шарик (110-115°C)","Твёрдый крек (150°C)","Тёмная карамель (180°C)"], a:1,
+   h:"Итальянскую меренгу заваривают сиропом 118-121°C — это стадия «мягкий/средний шарик»."},
+  {q:"Что произойдёт, если капнуть карамель 150°C в холодную воду?",
+   o:["Растворится","Образует мягкий шарик","Застынет в хрупкое стекло","Всплывёт пеной"], a:2,
+   h:"Это стадия «твёрдый крек». Капля мгновенно стекленеет и хрустит при разламывании."},
+  {q:"Для какого блюда лучше всего подходит светлая карамель (160°C)?",
+   o:["Леденцы-петушки","Карамельный соус для крема флан","Простой сироп для пропитки","Грильяж"], a:1,
+   h:"Светлая карамель даёт мягкий ореховый вкус без горечи — идеально для соусов и кремов."},
+  {q:"Какой главный признак того, что сахар сгорел?",
+   o:["Появились пузырьки","Масса стала золотистой","Резкий едкий дым и чёрный цвет","Сироп загустел"], a:2,
+   h:"При 190°C+ сахар разлагается с выделением едкого дыма. Такую карамель нужно выбросить."},
+  {q:"Что такое «тест в холодной воде»?",
+   o:["Проверка свежести сахара","Определение стадии по поведению капли сиропа","Способ охлаждения кастрюли","Метод растворения карамели"], a:1,
+   h:"Каплю сиропа опускают в ледяную воду и смотрят, какую структуру она образует — это классический метод без термометра."},
+  {q:"Почему для карамели рекомендуют тяжёлую кастрюлю с толстым дном?",
+   o:["Для красоты","Для равномерного нагрева и предотвращения пригорания","Чтобы дольше держать тепло","Чтобы было тяжелее мешать"], a:1,
+   h:"Толстое дно распределяет тепло равномерно — сахар не пригорает локально и карамелизуется равномерно."},
+  {q:"Для чего используется тёмная карамель (175-185°C)?",
+   o:["Для сладких леденцов","Как колер для окрашивания напитков и соусов","Для итальянской меренги","Для помадки"], a:1,
+   h:"Тёмная карамель имеет выраженный горьковатый вкус, поэтому её используют как натуральный краситель (колер) в малых дозах."},
+  {q:"Что происходит с сахаром при 100°C?",
+   o:["Начинается карамелизация","Вода кипит и выпаривается, сироп становится гуще","Сахар плавится","Образуется карамельный аромат"], a:1,
+   h:"При 100°C кипит вода. Сахар ещё не плавится — просто выпаривается влага из сиропа."},
+  {q:"Какое блюдо готовят из сиропа стадии «твёрдый шарик» (125-130°C)?",
+   o:["Карамельный крем","Тянучки и грильяж","Помадку","Простой сироп"], a:1,
+   h:"Твёрдый шарик даёт пластичную, но плотную массу — идеально для тянучек и грильяжа."},
+  {q:"Что НЕЛЬЗЯ делать при приготовлении карамели?",
+   o:["Использовать термометр","Мешать сироп ложкой после закипания (вызывает кристаллизацию)","Добавлять лимонный сок","Следить за цветом"], a:1,
+   h:"Интенсивное перемешивание после растворения сахара провоцирует кристаллизацию — сироп станет зернистым."},
+  {q:"Какой цвет у карамели стадии «мягкий крек» (135-145°C)?",
+   o:["Прозрачный","Светло-янтарный","Тёмно-коричневый","Чёрный"], a:1,
+   h:"Мягкий крек имеет светло-янтарный, медовый цвет с лёгким карамельным ароматом."},
+  {q:"Зачем добавляют лимонный сок или кислоту в сахарный сироп?",
+   o:["Для вкуса","Чтобы предотвратить кристаллизацию сахара (инверсия)","Для цвета","Чтобы быстрее закипел"], a:1,
+   h:"Кислота расщепляет сахарозу на глюкозу и фруктозу — такие сиропы не кристаллизуются."},
+  {q:"Что такое нугатина?",
+   o:["Вид шоколада","Хрупкая карамель с орехами, готовится при 160-170°C","Вид помадки","Жидкий карамельный соус"], a:1,
+   h:"Нугатина — это карамель средней стадии с добавлением орехов, застывающая в хрупкие пласты."},
+  {q:"Какая температура опасна для кожи при работе с карамелью?",
+   o:["Только выше 200°C","Любая выше 60°C, а карамель 150°C+ вызывает тяжёлые ожоги","Карамель безопасна","Только жжёный сахар"], a:1,
+   h:"Карамель — крайне опасная субстанция! Она прилипает к коже и имеет температуру выше 150°C, вызывая глубокие ожоги."}
+];
+
+let qIdx = 0, qScoreVal = 0, qAnswered = false;
+
+function startQuiz() {
+  qIdx = 0; qScoreVal = 0;
+  document.getElementById('qScore').textContent = 0;
+  showQuestion();
+  showScreen('quiz');
+}
+
+function showQuestion() {
+  qAnswered = false;
+  const q = questions[qIdx];
+  document.getElementById('qCounter').textContent = `${qIdx+1} / ${questions.length}`;
+  document.getElementById('qProgress').style.width = ((qIdx+1)/questions.length*100) + '%';
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('qHint').style.display = 'none';
+  document.getElementById('qFeedback').classList.remove('show');
+  document.getElementById('nextBtn').style.display = 'none';
+  document.getElementById('hintBtn').style.display = 'inline-block';
+  const optDiv = document.getElementById('qOptions');
+  optDiv.innerHTML = '';
+  q.o.forEach((opt, i) => {
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.textContent = opt;
+    b.onclick = () => answerQuestion(b, i);
+    optDiv.appendChild(b);
+  });
+}
+
+function showHint() {
+  const h = document.getElementById('qHint');
+  h.textContent = '💡 ' + questions[qIdx].h;
+  h.style.display = 'block';
+  document.getElementById('hintBtn').style.display = 'none';
+}
+
+function answerQuestion(btn, idx) {
+  if (qAnswered) return;
+  qAnswered = true;
+  const q = questions[qIdx];
+  const correct = idx === q.a;
+  document.querySelectorAll('#qOptions .option').forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.a) b.classList.add('correct');
+  });
+  if (!correct) btn.classList.add('wrong');
+  const fb = document.getElementById('qFeedback');
+  if (correct) {
+    qScoreVal++;
+    fb.className = 'feedback show ok';
+    fb.innerHTML = `✅ <strong>Верно!</strong> ${q.h}`;
+  } else {
+    fb.className = 'feedback show bad';
+    fb.innerHTML = `❌ <strong>Правильный ответ:</strong> ${q.o[q.a]}. ${q.h}`;
+  }
+  document.getElementById('qScore').textContent = qScoreVal;
+  document.getElementById('nextBtn').style.display = 'inline-block';
+  document.getElementById('hintBtn').style.display = 'none';
+}
+
+function nextQuestion() {
+  qIdx++;
+  if (qIdx >= questions.length) {
+    showResult();
+  } else {
+    showQuestion();
+  }
+}
+
+function showResult() {
+  document.getElementById('finalScore').textContent = qScoreVal;
+  document.getElementById('finalTotal').textContent = questions.length;
+  const pct = qScoreVal / questions.length;
+  let emoji, comment;
+  if (pct === 1) { emoji='🏆'; comment='Идеально! Вы настоящий мастер сахара!'; }
+  else if (pct >= 0.8) { emoji=''; comment='Отличный результат! Вы хорошо разбираетесь в карамели.'; }
+  else if (pct >= 0.6) { emoji='👍'; comment='Хорошо! Но есть над чем поработать — вернитесь в лабораторию.'; }
+  else if (pct >= 0.4) { emoji='📚'; comment='Стоит повторить теорию. Загляните в справочник!'; }
+  else { emoji='🔥'; comment='Карамель — дело тонкое. Начните с лаборатории и справочника.'; }
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultComment').textContent = comment;
+
+  const best = parseInt(localStorage.getItem('karamelBest') || 0);
+  if (qScoreVal > best) {
+    localStorage.setItem('karamelBest', qScoreVal);
+    document.getElementById('resultComment').textContent += ' 🌟 Новый рекорд!';
+  }
+  document.getElementById('bestScore').textContent = Math.max(best, qScoreVal) + ' / ' + questions.length;
+  showScreen('result');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const best = localStorage.getItem('karamelBest') || 0;
+  document.getElementById('bestScore').textContent = best + ' / 15';
+});
+</script>
+</body>
+</html>
